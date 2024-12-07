@@ -40,21 +40,18 @@ const Home = () => {
           />
         )}
         ListHeaderComponent={() => (
-          <View className="flex my-6 px-4 space-y-6">
-            <View className="flex justify-between items-start flex-row mb-6">
+          <View className="flex-1 my-6 px-4 space-y-6">
+            <View className="flex justify-between items-start flex-row bg-gray shadow-sm p-4">
               <View>
-                <Text className="font-pmedium text-sm text-gray-500">
-                  Welcome Back
-                </Text>
-                <Text className="text-2xl font-psemibold text-white">
-                  Chat with Spark
+                <Text className="text-2xl font-semibold text-gray-800">
+                  Chat with Copey
                 </Text>
               </View>
 
-              <View className="mt-1.5">
+              <View>
                 <Image
-                  source={images.logoSmall}
-                  className="w-9 h-10"
+                  source={images.logo}
+                  className="w-[130px] h-[84px]"
                   resizeMode="contain"
                 />
               </View>

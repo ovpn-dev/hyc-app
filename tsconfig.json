@@ -8,14 +8,14 @@
     "noEmit": true,
     "resolveJsonModule": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "**/*.js"
+    "**/*.js",
+    "app/index.jsx",
+    "components/CustomButton.jsx"
   ]
 }

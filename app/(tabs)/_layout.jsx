@@ -61,15 +61,15 @@ const TabLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="spark"
+          name="blog"
           options={{
-            title: "Spark",
+            title: "Blog",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.bookmark}
+                icon={icons.plus}
                 color={color}
-                name="Spark"
+                name="Blog"
                 focused={focused}
               />
             ),
@@ -77,15 +77,15 @@ const TabLayout = () => {
         />
 
         <Tabs.Screen
-          name="create"
+          name="chatScreen"
           options={{
-            title: "Create",
+            title: "Chat",
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                icon={icons.plus}
+                icon={icons.bookmark}
                 color={color}
-                name="Create"
+                name="Copey"
                 focused={focused}
               />
             ),
