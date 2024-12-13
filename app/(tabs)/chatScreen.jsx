@@ -18,8 +18,6 @@ import { images } from "../../constants";
 import { ChevronDown, Plus, Paperclip, Send } from "lucide-react-native";
 
 const ChatScreen = () => {
-  // const [model, setModel] = useState("GPT 4o mini");
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const flatListRef = useRef(null);
@@ -51,12 +49,10 @@ const ChatScreen = () => {
   return (
     <SafeAreaView className="flex-1 bg-gray-100">
       {/* Header */}
-      <View className="flex justify-between items-start flex-row bg-white shadow-sm p-4">
+      <View className="flex justify-between items-start flex-row bg-[#161622] shadow-sm p-4">
         <View>
-          <Text className="font-pmedium text-sm text-gray-500">
-            Welcome Back
-          </Text>
-          <Text className="text-2xl font-semibold text-gray-800">
+          <Text className="font-pmedium text-sm text-white">Welcome Back</Text>
+          <Text className="text-2xl font-semibold text-white">
             Chat with Copey
           </Text>
         </View>
