@@ -6,33 +6,29 @@ export function NotificationHandler() {
   const router = useRouter();
 
   useEffect(() => {
-    // Handle notification interactions
+    // Handle notification interactions ONLY when app is already running
+    // App startup from notifications is handled in index.jsx
     const subscription = Notifications.addNotificationResponseReceivedListener(
       (response) => {
         const screen = response.notification.request.content.data?.screen;
-        console.log("NotificationHandler: navigating to", screen);
+        console.log("NotificationHandler: In-app navigation to", screen);
 
-        // Navigate to the specified screen
+        // This only handles notifications when app is already running
+        // NOT when app starts from a notification (that's handled in index.jsx)
         if (screen === "Quotes") {
           try {
-            // Add a small delay to ensure app state is settled
-            setTimeout(() => {
-              console.log("Navigating to quotes from notification");
-              router.replace("/quotes");
-            }, 100);
+            console.log("Navigating to quotes from in-app notification");
+            // Immediate navigation since app is already running
+            router.push("/quotes"); // Using push instead of replace for in-app navigation
           } catch (error) {
-            console.error("Navigation error:", error);
-            // Fallback navigation attempt with longer delay
-            setTimeout(() => {
-              router.replace("/quotes");
-            }, 1000);
+            console.error("In-app navigation error:", error);
           }
         }
       }
     );
 
     return () => {
-      Notifications.removeNotificationSubscription(subscription);
+      subscription?.remove();
     };
   }, [router]);
 

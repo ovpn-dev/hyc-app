@@ -1,3 +1,4 @@
+// index.jsx - Modified version to avoid race condition
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { View, Text, Image, ScrollView } from "react-native";
@@ -6,7 +7,7 @@ import { images } from "../constants";
 import { CustomButton, Loader } from "../components";
 import { useGlobalContext } from "../context/GlobalProvider";
 import StepProgress from "../components/multiStep";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { initializeFirebase } from "../firebase/firebase-config";
 import NicknameSetup from "../app/NicknameSetup";
 import * as Notifications from "expo-notifications";
@@ -14,34 +15,42 @@ import * as Notifications from "expo-notifications";
 const Welcome = () => {
   const { loading, isNewUser, setIsNewUser } = useGlobalContext();
   const [showNicknameSetup, setShowNicknameSetup] = useState(false);
+  const hasNavigated = useRef(false); // Prevent multiple navigation attempts
 
   useEffect(() => {
     initializeFirebase();
 
     // Auto-redirect existing users to home, but check for notification first
-    if (!isNewUser && !loading) {
+    if (!isNewUser && !loading && !hasNavigated.current) {
       const checkAndRedirect = async () => {
         try {
           const response =
             await Notifications.getLastNotificationResponseAsync();
+
+          // Only handle navigation HERE, not in NotificationHandler for app startup
           if (
             response?.notification.request.content.data?.screen === "Quotes"
           ) {
             console.log("App opened from notification, navigating to quotes");
+            hasNavigated.current = true;
             setTimeout(() => {
               router.replace("/quotes");
-            }, 300);
+            }, 200); // Consistent timing
           } else {
             // No notification, just redirect to home
+            hasNavigated.current = true;
             setTimeout(() => {
               router.replace("/home");
             }, 100);
           }
         } catch (error) {
           // If can't check notification, just redirect to home
-          setTimeout(() => {
-            router.replace("/home");
-          }, 100);
+          if (!hasNavigated.current) {
+            hasNavigated.current = true;
+            setTimeout(() => {
+              router.replace("/home");
+            }, 100);
+          }
         }
       };
 
@@ -58,13 +67,6 @@ const Welcome = () => {
   const handleNicknameComplete = () => {
     setIsNewUser(false);
   };
-
-  // Auto-redirect existing users to home (unless they came from a notification)
-  useEffect(() => {
-    if (!isNewUser && !loading) {
-      // This is now handled in the main useEffect above
-    }
-  }, [isNewUser, loading]);
 
   // If it's a new user, show StepProgress first, then nickname setup
   if (isNewUser) {
