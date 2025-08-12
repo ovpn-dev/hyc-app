@@ -4,6 +4,7 @@ import * as Device from "expo-device";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { useState, useEffect, useRef } from "react";
+import { STORAGE_KEYS, StorageHelpers } from "../../constants/storage"; // Import the constants
 
 // Configure notifications
 Notifications.setNotificationHandler({
@@ -94,8 +95,14 @@ export const useNotifications = () => {
   // Load saved notification preferences
   const loadNotificationPreferences = async () => {
     try {
-      const savedTime = await AsyncStorage.getItem("notificationTime");
-      const savedEnabled = await AsyncStorage.getItem("notificationsEnabled");
+      // Use consistent storage keys
+      const savedTime = await StorageHelpers.getItem(
+        STORAGE_KEYS.NOTIFICATION_TIME
+      );
+      const savedEnabled = await StorageHelpers.getItem(
+        STORAGE_KEYS.NOTIFICATIONS_ENABLED,
+        false
+      );
 
       if (savedTime) {
         const time = new Date(savedTime);
@@ -107,10 +114,12 @@ export const useNotifications = () => {
         setNotificationTime(defaultTime);
       }
 
-      const enabled = savedEnabled === "true";
-      setIsEnabled(enabled);
+      setIsEnabled(savedEnabled);
 
-      return { time: savedTime ? new Date(savedTime) : null, enabled };
+      return {
+        time: savedTime ? new Date(savedTime) : null,
+        enabled: savedEnabled,
+      };
     } catch (error) {
       console.error("Error loading notification preferences:", error);
       const defaultTime = new Date();
@@ -135,7 +144,8 @@ export const useNotifications = () => {
         );
       }
 
-      await AsyncStorage.setItem("notificationsEnabled", enabled.toString());
+      // Use consistent storage key
+      await StorageHelpers.setItem(STORAGE_KEYS.NOTIFICATIONS_ENABLED, enabled);
     } catch (error) {
       console.error("Error toggling notifications:", error);
       setIsEnabled(!enabled); // Revert on error
@@ -146,7 +156,11 @@ export const useNotifications = () => {
   const updateNotificationTime = async (newTime: Date) => {
     try {
       setNotificationTime(newTime);
-      await AsyncStorage.setItem("notificationTime", newTime.toISOString());
+      // Use consistent storage key
+      await StorageHelpers.setItem(
+        STORAGE_KEYS.NOTIFICATION_TIME,
+        newTime.toISOString()
+      );
 
       if (isEnabled) {
         await scheduleNotification(newTime);
