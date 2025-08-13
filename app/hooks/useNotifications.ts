@@ -28,8 +28,9 @@ export const useNotifications = () => {
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync("daily-quotes", {
         name: "Daily Quotes",
-        importance: Notifications.AndroidImportance.MAX,
+        importance: Notifications.AndroidImportance.HIGH, // Changed from MAX for SDK 52
         vibrationPattern: [0, 250, 250, 250],
+        sound: true, // Explicitly set sound for SDK 52
       });
     }
 
@@ -68,28 +69,95 @@ export const useNotifications = () => {
     return token;
   }
 
-  // Schedule notification for the specified time
+  // Schedule notification for the specified time (Updated for SDK 52)
   const scheduleNotification = async (time: Date) => {
-    // Cancel any existing notifications
-    await Notifications.cancelAllScheduledNotificationsAsync();
+    try {
+      // Cancel any existing notifications
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      console.log("Cancelled all existing notifications");
 
-    // Schedule the notification
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "Your Daily Quote Is Here!",
-        body: "Tap to view today's inspiration",
-        data: { screen: "Quotes" },
-      },
-      trigger: {
-        hour: time.getHours(),
-        minute: time.getMinutes(),
-        repeats: true,
-      },
-    });
+      let notificationId;
 
-    console.log(
-      `Notification scheduled for ${time.toLocaleTimeString()} daily.`
-    );
+      if (Platform.OS === "ios") {
+        // iOS: Use calendar trigger
+        notificationId = await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Your Daily Quote Is Here!",
+            body: "Tap to view today's inspiration",
+            data: { screen: "Quotes" },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+            hour: time.getHours(),
+            minute: time.getMinutes(),
+            repeats: true,
+          },
+        });
+        console.log(
+          `iOS: Calendar trigger scheduled for ${time.toLocaleTimeString()}`
+        );
+      } else {
+        // Android: Use date-based trigger with manual daily scheduling
+        const now = new Date();
+        const scheduleTime = new Date();
+        scheduleTime.setHours(time.getHours(), time.getMinutes(), 0, 0);
+
+        // If the time has already passed today, schedule for tomorrow
+        if (scheduleTime <= now) {
+          scheduleTime.setDate(scheduleTime.getDate() + 1);
+        }
+
+        notificationId = await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "Your Daily Quote Is Here!",
+            body: "Tap to view today's inspiration",
+            data: { screen: "Quotes" },
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: scheduleTime,
+          },
+        });
+
+        console.log(
+          `Android: Date trigger scheduled for ${scheduleTime.toLocaleString()}`
+        );
+
+        // For Android, we need to schedule multiple notifications for the "daily" effect
+        // Schedule for the next 30 days
+        for (let i = 1; i <= 30; i++) {
+          const futureDate = new Date(scheduleTime);
+          futureDate.setDate(scheduleTime.getDate() + i);
+
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Your Daily Quote Is Here!",
+              body: "Tap to view today's inspiration",
+              data: { screen: "Quotes" },
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DATE,
+              date: futureDate,
+            },
+          });
+        }
+        console.log(
+          `Android: Scheduled 31 daily notifications starting from ${scheduleTime.toLocaleString()}`
+        );
+      }
+
+      // Verify scheduling
+      const scheduledNotifications =
+        await Notifications.getAllScheduledNotificationsAsync();
+      console.log(
+        `Total scheduled notifications: ${scheduledNotifications.length}`
+      );
+
+      return notificationId;
+    } catch (error) {
+      console.error("Failed to schedule notification:", error);
+      throw error;
+    }
   };
 
   // Load saved notification preferences
@@ -137,6 +205,7 @@ export const useNotifications = () => {
 
       if (enabled && notificationTime) {
         await scheduleNotification(notificationTime);
+        console.log("Notifications enabled and scheduled");
       } else {
         await Notifications.cancelAllScheduledNotificationsAsync();
         console.log(
@@ -164,9 +233,35 @@ export const useNotifications = () => {
 
       if (isEnabled) {
         await scheduleNotification(newTime);
+        console.log(
+          `Notification time updated to ${newTime.toLocaleTimeString()}`
+        );
       }
     } catch (error) {
       console.error("Error updating notification time:", error);
+    }
+  };
+
+  // Helper function to check and renew Android notifications
+  const checkAndRenewAndroidNotifications = async () => {
+    if (Platform.OS !== "android" || !isEnabled || !notificationTime) {
+      return;
+    }
+
+    try {
+      const scheduledNotifications =
+        await Notifications.getAllScheduledNotificationsAsync();
+      console.log(
+        `Current scheduled notifications: ${scheduledNotifications.length}`
+      );
+
+      // If we have fewer than 7 days of notifications left, renew
+      if (scheduledNotifications.length < 7) {
+        console.log("Renewing Android notifications...");
+        await scheduleNotification(notificationTime);
+      }
+    } catch (error) {
+      console.error("Error checking/renewing Android notifications:", error);
     }
   };
 
@@ -184,10 +279,28 @@ export const useNotifications = () => {
         if (enabled && time) {
           const scheduled =
             await Notifications.getAllScheduledNotificationsAsync();
+          console.log(`Found ${scheduled.length} scheduled notifications`);
+
           if (scheduled.length === 0) {
             console.log("No notifications scheduled. Setting up notification.");
             await scheduleNotification(time);
+          } else {
+            console.log("Notifications already scheduled");
+            // For Android, check if we need to renew notifications
+            if (Platform.OS === "android" && scheduled.length < 7) {
+              console.log("Android notifications running low, renewing...");
+              await scheduleNotification(time);
+            }
           }
+        }
+
+        // Set up a periodic check for Android notification renewal (every 24 hours)
+        if (Platform.OS === "android") {
+          const renewalInterval = setInterval(
+            checkAndRenewAndroidNotifications,
+            24 * 60 * 60 * 1000
+          );
+          return () => clearInterval(renewalInterval);
         }
       } catch (error) {
         console.error("Error setting up notifications:", error);
@@ -219,5 +332,6 @@ export const useNotifications = () => {
     isEnabled,
     updateNotificationTime,
     toggleNotifications,
+    checkAndRenewAndroidNotifications, // Expose for manual renewal if needed
   };
 };

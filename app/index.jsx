@@ -1,4 +1,4 @@
-// index.jsx - Modified version to avoid race condition
+// index.jsx - Clean startup flow without notification logic
 import { StatusBar } from "expo-status-bar";
 import { router } from "expo-router";
 import { View, Text, Image, ScrollView } from "react-native";
@@ -10,51 +10,29 @@ import StepProgress from "../components/multiStep";
 import { useEffect, useState, useRef } from "react";
 import { initializeFirebase } from "../firebase/firebase-config";
 import NicknameSetup from "../app/NicknameSetup";
-import * as Notifications from "expo-notifications";
 
 const Welcome = () => {
   const { loading, isNewUser, setIsNewUser } = useGlobalContext();
   const [showNicknameSetup, setShowNicknameSetup] = useState(false);
-  const hasNavigated = useRef(false); // Prevent multiple navigation attempts
+  const hasNavigated = useRef(false);
 
   useEffect(() => {
     initializeFirebase();
 
-    // Auto-redirect existing users to home, but check for notification first
+    // Simple auto-redirect for existing users - no notification logic here
+    // NotificationHandler will handle all notification-based navigation
     if (!isNewUser && !loading && !hasNavigated.current) {
-      const checkAndRedirect = async () => {
+      console.log("Existing user, redirecting to home");
+      hasNavigated.current = true;
+
+      // Small delay to ensure app is ready
+      setTimeout(() => {
         try {
-          const response =
-            await Notifications.getLastNotificationResponseAsync();
-
-          // Only handle navigation HERE, not in NotificationHandler for app startup
-          if (
-            response?.notification.request.content.data?.screen === "Quotes"
-          ) {
-            console.log("App opened from notification, navigating to quotes");
-            hasNavigated.current = true;
-            setTimeout(() => {
-              router.replace("/quotes");
-            }, 200); // Consistent timing
-          } else {
-            // No notification, just redirect to home
-            hasNavigated.current = true;
-            setTimeout(() => {
-              router.replace("/home");
-            }, 100);
-          }
-        } catch (error) {
-          // If can't check notification, just redirect to home
-          if (!hasNavigated.current) {
-            hasNavigated.current = true;
-            setTimeout(() => {
-              router.replace("/home");
-            }, 100);
-          }
+          router.replace("/home");
+        } catch (navError) {
+          console.error("Failed to navigate to home:", navError);
         }
-      };
-
-      checkAndRedirect();
+      }, 100);
     }
   }, [isNewUser, loading]);
 
@@ -68,6 +46,14 @@ const Welcome = () => {
     setIsNewUser(false);
   };
 
+  // Manual navigation for the "Get Started" button
+  const handleGetStarted = () => {
+    if (!hasNavigated.current) {
+      hasNavigated.current = true;
+      router.push("/home");
+    }
+  };
+
   // If it's a new user, show StepProgress first, then nickname setup
   if (isNewUser) {
     if (showNicknameSetup) {
@@ -77,6 +63,7 @@ const Welcome = () => {
     return <StepProgress onComplete={handleStepProgressComplete} />;
   }
 
+  // Show welcome screen for existing users while loading/checking notifications
   return (
     <SafeAreaView className="bg-primary h-full">
       <Loader isLoading={loading} />
@@ -114,7 +101,7 @@ const Welcome = () => {
           </Text>
           <CustomButton
             title="Get Started"
-            handlePress={() => router.push("/home")}
+            handlePress={handleGetStarted}
             containerStyles="w-full mt-7"
           />
         </View>
