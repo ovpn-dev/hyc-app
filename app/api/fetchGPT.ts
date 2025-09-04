@@ -93,7 +93,7 @@ const fetchChatGPTResponse = async (
       return "I'm having trouble connecting right now. Please check your internet connection and try again.";
     }
 
-    return "I apologize, but I'm having trouble processing your message right now. Could you please try again?";
+    return "I apologize, but I'm having some trouble processing your message right now. Could you please try again?";
   }
 };
 
