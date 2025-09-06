@@ -3,7 +3,7 @@
     "name": "Help Youth Cope",
     "scheme": "hyc-app",
     "slug": "hyc-app",
-    "version": "1.0.0",
+    "version": "1.24.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
