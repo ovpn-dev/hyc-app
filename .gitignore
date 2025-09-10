@@ -42,7 +42,6 @@ yarn-error.*
 
 # Google Service Files
 google-services.json
-GoogleService-Info.plist
 hyc-app-66c21-6e48a8be7dd4.json
 
 # typescript
