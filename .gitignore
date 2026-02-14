@@ -4,7 +4,7 @@
 node_modules/
 
 # builds
-/andriod
+/android
 /ios
 
 # Expo
@@ -12,9 +12,8 @@ node_modules/
 dist/
 web-build/
 .easignore
-andriod/
-secret/
-/secret
+android/
+/secret/
 
 # Native
 *.orig.*
@@ -43,6 +42,7 @@ yarn-error.*
 # Google Service Files
 google-services.json
 hyc-app-66c21-6e48a8be7dd4.json
+GoogleService-Info.plist
 
 # typescript
 *.tsbuildinfo
