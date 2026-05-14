@@ -8,6 +8,10 @@ Welcome to the hyc-app repository!
 
 This repository contains the source code for the hyc-app built with the expo framework on react-native. The primary language used in this project is JavaScript, with a portion of the code written in TypeScript. The project is a mobile application built for supporting and motivating the youths on the go. It contains a daily quote feature with push notifications. An Al chatbot using llama 3.1 via groqs api, it is grounded to offer help to users. Live access to the official help youth cope blog posts, direct sos hot line, resources amongst others. The app will be readily updated with new features when requested by the client.
 
+## URL
+- https://apps.apple.com/us/app/help-youth-cope/id6743499151?platform=iphone
+- https://play.google.com/store/apps/details?id=com.hyc.hyc
+
 ## Table of Contents
 
 - [Installation](#installation)
